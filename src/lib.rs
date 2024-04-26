@@ -6,9 +6,12 @@ use std::path::Path;
 mod hyper;
 
 pub fn single_cap(f: &str) {
+    let start_time = Instant::now();
     let path = Path::new(f);
     let v = hyper::X264Video::load(path.to_path_buf());
     let _ = v.processing();
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?}", elapsed_time);
 }
 
 pub fn rayon_cap(d: &str) {
