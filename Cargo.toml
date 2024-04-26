@@ -1,0 +1,17 @@
+[package]
+name = "beframe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version= "4.5.4", features=["derive"] }
+# arrow = { version="51.0", features = ["ipc", "test_utils", "prettyprint", "json"] }
+# parquet = { version = "51.0.0" }
+
+ffmpeg-next = { version = "7.0.0" }
+rayon = "1.10"
+image = "0.25.1"
+md-5 = "0.10.6"
+[[bin]]
+name = "bf"
+path = "src/cli.rs"
