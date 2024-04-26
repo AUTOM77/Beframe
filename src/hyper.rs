@@ -38,17 +38,22 @@ impl X264Video {
                 .best(media::Type::Video)
                 .ok_or(ffmpeg_next::Error::StreamNotFound)?;
         let idx = input.index();
-
         let ctx = codec::context::Context::from_parameters(input.parameters())?;
+
         let mut decoder = ctx.decoder().video()?;
 
         let mut count = 0;
+        let mut valid = 0;
+
         for (stream, packet) in ictx.packets() {
             if stream.index() == idx {
                 decoder.send_packet(&packet)?;
                 let mut decoded_frame = frame::video::Video::empty();
                 while decoder.receive_frame(&mut decoded_frame).is_ok() {
-                    let _ = self.add_frame(&decoded_frame, count)?;
+                    if count % 5 ==0 {
+                        let _ = self.add_frame(&decoded_frame, valid)?;
+                        valid+=1;
+                    }
                     count+=1;
                 }
             }
@@ -58,7 +63,7 @@ impl X264Video {
     }
 
     pub fn add_frame(&self, _frame: &frame::video::Video, i: usize) -> Result<(), Box<dyn std::error::Error>> {
-        let f = format!("{}/{:04}.png", self.local, i);
+        let f = format!("{}/{:04}.jpg", self.local, i);
 
         let w = _frame.width();
         let h = _frame.height();
@@ -75,7 +80,7 @@ impl X264Video {
         let mut frame = frame::video::Video::empty();
         scaler.run(&_frame, &mut frame)?;
 
-        let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap(); 
+        let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap();
         img.save(f)?; 
         Ok(())
     }
