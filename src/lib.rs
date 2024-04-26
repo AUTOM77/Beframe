@@ -6,7 +6,9 @@ use std::path::Path;
 mod hyper;
 
 pub fn single_cap(f: &str) {
-    println!("Processing file: {:?} ", f);
+    let path = Path::new(f);
+    let v = hyper::X264Video::load(path.to_path_buf());
+    let _ = v.processing();
 }
 
 pub fn rayon_cap(d: &str) {
