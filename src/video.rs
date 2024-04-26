@@ -3,7 +3,7 @@ use md5::{Md5, Digest};
 use image::RgbImage;
 use ffmpeg_next::{codec, format, frame, media, software};
 
-static _CACHE: &str = "cache";
+static _CACHE: &str = "fc";
 
 #[derive(Debug)]
 pub struct X264Video<'a> {
