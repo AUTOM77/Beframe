@@ -1,26 +1,25 @@
 use std::fs;
+use std::path::PathBuf;
+
 use md5::{Md5, Digest};
 use image::RgbImage;
 use ffmpeg_next::{codec, format, frame, media, software};
-use rayon::prelude::*;
 
 static _CACHE: &str = "cache";
 
 #[derive(Debug)]
-pub struct X264Video<'a> {
-    path: &'a str,
-    local: &'a str
+pub struct X264Video {
+    path: PathBuf,
+    local: String
 }
 
-impl<'a> X264Video<'a> {
-    pub fn load(path: &'a str) -> Self {
-        let buffer = fs::read(path).unwrap();
+impl X264Video {
+    pub fn load(path: PathBuf) -> Self {
+        let buffer = fs::read(&path).unwrap();
         let mut hasher = Md5::new();
         hasher.update(&buffer);
         let digest = hasher.finalize();
-
-        let hash = format!("{:x}", digest).leak();
-        let local = format!("{}/{}", _CACHE, &hash).leak();
+        let local = format!("{}/{:x}", _CACHE, digest);
 
         X264Video {
             path,
@@ -32,7 +31,7 @@ impl<'a> X264Video<'a> {
         let _ = self.mkdir();
         ffmpeg_next::init()?;
 
-        let mut ictx = format::input(self.path)?;
+        let mut ictx = format::input(&self.path)?;
 
         let input = ictx
                 .streams()
@@ -82,7 +81,7 @@ impl<'a> X264Video<'a> {
     }
 
     pub fn mkdir(&self) -> Result<(), std::io::Error> {
-        fs::create_dir_all(self.local)?;
+        fs::create_dir_all(&self.local)?;
         Ok(())
     }
 }

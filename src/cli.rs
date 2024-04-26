@@ -1,21 +1,30 @@
-use clap::Parser;
-use std::time::Instant;
+use clap::{Args, Parser};
 
-mod hyper;
-
-#[derive(Parser, Debug)]
-struct Args {
+#[derive(Args)]
+#[group(required = true, multiple = false)]
+struct Opts {
     #[arg(short = 'f', long, name = "FILE")]
-    file: String
+    file: Option<String>,
+
+    #[arg(short = 'd', long, name = "DIR")]
+    dir: Option<String>,
 }
 
+#[derive(Parser)]
+struct Cli {
+    #[command(flatten)]
+    opt: Opts,
+}
+
+
 fn main() {
-    let _args = Args::parse();
-    let v = hyper::X264Video::load(&_args.file);
-    let start_time = Instant::now(); // Start time measurement
+    let cli = Cli::parse();
 
-    let _ = v.processing();
-
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?}", elapsed_time);
+    let opt = &cli.opt;
+    if let Some(file_path) = opt.file.as_deref() {
+        let _ = core::single_cap(file_path);
+    } else if let Some(dir_path) = opt.dir.as_deref() {
+        let _ = core::batch_cap(dir_path);
+        let _ = core::rayon_cap(dir_path);
+    }
 }
