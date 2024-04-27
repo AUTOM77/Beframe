@@ -30,6 +30,8 @@ impl X264Video {
     }
 
     pub async fn processing(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut tasks = Vec::new();
+
         let _ = self.mkdir().await?;
 
         ffmpeg_next::init()?;
@@ -71,7 +73,11 @@ impl X264Video {
                         scaler.run(&decoded_frame, &mut frame)?;
                         let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap();
                         let data = img.to_vec();
-
+                        tasks.push(tokio::spawn(async move {
+                            let mut file = fs::File::create(f).await?;
+                            file.write_all(&data).await?;
+                            Ok::<(), std::io::Error>(())
+                        }));
                         valid+=1;
                     }
                     count+=1;
