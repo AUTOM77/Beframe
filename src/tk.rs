@@ -48,13 +48,31 @@ impl X264Video {
         let mut count = 0;
         let mut valid = 0;
 
+        let w = decoder.width();
+        let h = decoder.height();
+        let fmt = decoder.format();
+
+        let mut scaler = software::scaling::context::Context::get(
+            fmt,
+            w, h,
+            format::Pixel::RGB24,
+            w, h,
+            software::scaling::flag::Flags::BILINEAR,
+        )?;
+
         for (stream, packet) in ictx.packets() {
             if stream.index() == idx {
                 decoder.send_packet(&packet)?;
                 let mut decoded_frame = frame::video::Video::empty();
                 while decoder.receive_frame(&mut decoded_frame).is_ok() {
                     if count % 5 ==0 {
-                        // let _ = self.add_frame(&decoded_frame, valid)?;
+                        // let _ = self.add_frame(&decoded_frame, valid).await?;
+                        let f = format!("{}/{:04}.jpg", self.local, valid);
+                        let mut frame = frame::video::Video::empty();
+                        scaler.run(&decoded_frame, &mut frame)?;
+                        let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap();
+                        img.save(f)?; 
+
                         valid+=1;
                     }
                     count+=1;
