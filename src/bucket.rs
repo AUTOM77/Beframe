@@ -1,7 +1,7 @@
 use parquet::arrow::{ArrowReader, ParquetFileArrowReader};
 use parquet::file::reader::{FileReader, SerializedFileReader};
 
-fn split_parquet(pq_path: &str, batch_size: usize) {
+pub fn split_parquet(pq_path: &str, batch_size: usize) {
     let start_time = Instant::now();
 
     let file = File::open(pq_path).unwrap();
@@ -27,7 +27,7 @@ fn split_parquet(pq_path: &str, batch_size: usize) {
     println!("Time taken to split parquet file: {:?}", end_time - start_time);
 }
 
-fn sample(pq_path: &str, num_rows: usize) -> Result<Vec<Vec<String>>, parquet::errors::ParquetError> {
+pub fn sample(pq_path: &str, num_rows: usize) -> Result<Vec<Vec<String>>, parquet::errors::ParquetError> {
     let file = File::open(pq_path)?;
     let file_reader = SerializedFileReader::new(file)?;
     let mut arrow_reader = ParquetFileArrowReader::new(file_reader);
