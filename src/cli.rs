@@ -16,7 +16,6 @@ struct Cli {
     opt: Opts,
 }
 
-
 fn main() {
     let cli = Cli::parse();
 

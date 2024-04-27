@@ -19,7 +19,7 @@ pub fn rayon_cap(d: &str) {
 
     std::fs::read_dir(d)
         .unwrap()
-        .par_bridge() // Introduce parallelism
+        .par_bridge()
         .filter_map(|entry| {
             let entry = entry.unwrap();
             let path = entry.path();
@@ -29,7 +29,8 @@ pub fn rayon_cap(d: &str) {
                 None
             }
         })
-        .for_each(|v| { let _ = v.processing(); });
+        .for_each(|v| {  });
+        // .for_each(|v| { let _ = v.processing(); });
 
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
@@ -46,7 +47,7 @@ pub fn batch_cap(d: &str) {
         
         if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
             let v = hyper::X264Video::load(path);
-            let _ = v.processing();
+            // let _ = v.processing();
         }
     }
 
