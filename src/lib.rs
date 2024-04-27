@@ -2,6 +2,7 @@ use rayon::{prelude::*, vec};
 
 use std::time::Instant;
 use std::path::Path;
+use std::path::PathBuf;
 
 mod hyper;
 
@@ -14,24 +15,65 @@ pub fn single_cap(f: &str) {
     println!("Processing time: {:?}", elapsed_time);
 }
 
+fn collect_mp4_files_cc(folder_path: &str) -> Vec<PathBuf> {
+    let mut mp4_files = Vec::new();
+    for entry in std::fs::read_dir(folder_path).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+
+        if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
+            mp4_files.push(path);
+        }
+    }
+    mp4_files
+}
+
+fn collect_mp4_files_rayon(folder_path: &str) -> Vec<PathBuf> {
+
+    std::fs::read_dir(folder_path)
+        .unwrap()
+        .par_bridge() // Introduce parallelism
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            let path = entry.path();
+            if path.is_file() && path.extension().map_or(false, |ext| ext == "mp4") {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+pub fn bench(d: &str) {
+    let start_time = Instant::now();
+    let _ = collect_mp4_files_rayon(d);
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?} rayon", elapsed_time);
+
+    let start_time = Instant::now();
+    let _ = collect_mp4_files_cc(d);
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?} normal", elapsed_time);
+
+}
+
 pub fn rayon_cap(d: &str) {
     let start_time = Instant::now();
 
-    let valid_path = std::fs::read_dir(d)
+    std::fs::read_dir(d)
         .unwrap()
         .par_bridge()
         .filter_map(|entry| {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
-                Some(path)
-                // Some(hyper::X264Video::load(path))
+                Some(hyper::X264Video::load(path))
             } else {
                 None
             }
-        });
-        // .for_each(|v| {  });
-        // .for_each(|v| { let _ = v.processing(); });
+        })
+        .for_each(|v| { let _ = v.processing(); });
 
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
@@ -41,17 +83,14 @@ pub fn rayon_cap(d: &str) {
 pub fn batch_cap(d: &str) {
     let start_time = Instant::now();
 
-    let mut valid_path = vec![];
-
     let path = Path::new(d);
     for entry in std::fs::read_dir(path).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         
         if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
-            // let v = hyper::X264Video::load(path);
-            valid_path.push(path);
-            // let _ = v.processing();
+            let v = hyper::X264Video::load(path);
+            let _ = v.processing();
         }
     }
 
