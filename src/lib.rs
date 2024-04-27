@@ -88,15 +88,15 @@ fn collect_mp4_files_rayon(folder_path: &str) -> Vec<PathBuf> {
 }
 
 pub fn bench(d: &str) {
-    let start_time = Instant::now();
-    let _ = cmp_rayon_1(d);
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?} rayon", elapsed_time);
-
     // let start_time = Instant::now();
-    // let _ = cmp_rayon_2(d);
+    // let _ = cmp_rayon_1(d);
     // let elapsed_time = start_time.elapsed();
-    // println!("Processing time: {:?} normal", elapsed_time);
+    // println!("Processing time: {:?} rayon", elapsed_time);
+
+    let start_time = Instant::now();
+    let _ = cmp_rayon_2(d);
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?} normal", elapsed_time);
 
 }
 
