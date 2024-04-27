@@ -5,8 +5,12 @@ edition = "2021"
 
 [dependencies]
 clap = { version= "4.5.4", features=["derive"] }
+tokio = { version = "1.37.0", features = ["full"] }
+# arrow = { version="51.0", features = ["ipc", "test_utils", "prettyprint", "json"] }
+# parquet = { version = "51.0.0" }
 ffmpeg-next = { version = "7.0.0", features=["build"] }
-rayon = "1.10"
+# rayon = "1.10"
+
 image = "0.25.1"
 md-5 = "0.10.6"
 [[bin]]

@@ -16,15 +16,17 @@ struct Cli {
     opt: Opts,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     let opt = &cli.opt;
     if let Some(file_path) = opt.file.as_deref() {
-        let _ = core::single_cap(file_path);
+        // let _ = core::single_cap(file_path);
     } else if let Some(dir_path) = opt.dir.as_deref() {
-        let _ = core::rayon_cap(dir_path);
+        let _ = core::bench(dir_path).await?;
+        // let _ = core::rayon_cap(dir_path);
+        // let _ = core::batch_cap(dir_path);
     }
-
     Ok(())
 }

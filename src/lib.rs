@@ -1,8 +1,8 @@
+use rayon::prelude::*;
+
 use std::time::Instant;
 use std::path::PathBuf;
-use tokio::task;
-
-mod tk;
+mod hyper;
 
 fn list_files(folder_path: &str) -> Vec<PathBuf> {
     let mut mp4_files = Vec::new();
@@ -17,33 +17,26 @@ fn list_files(folder_path: &str) -> Vec<PathBuf> {
     mp4_files
 }
 
-
-async fn cmp_async_1(d: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let files = list_files(d);
-    let mut pool = Vec::new();
-
-    for f in files {
-        pool.push(task::spawn(async {
-            let v = tk::X264Video::load(f);
-            let _  = v.processing().await;
-        }));
-    }
-
-    for task in pool {
-        task.await?;
-    }
-
-    Ok(())
-}
-
-
-
-pub async fn bench(d: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn single_cap(f: &str) {
     let start_time = Instant::now();
-    let _ = cmp_async_1(d).await?;
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?} normal", elapsed_time);
 
-    Ok(())
+    let path = PathBuf::from(f);
+    let v = hyper::X264Video::load(path);
+    let _ = v.processing();
+
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?}", elapsed_time);
 }
 
+pub fn rayon_cap(d: &str) {
+    let start_time = Instant::now();
+
+    let files = list_files(d);
+    let _ = files.par_iter().for_each(|f| {
+        let v = hyper::X264Video::load(f.to_path_buf());
+        let _ = v.processing();
+    });
+
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?}", elapsed_time);
+}
