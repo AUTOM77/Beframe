@@ -44,7 +44,7 @@ pub fn rayon_cap(d: &str) {
 
 pub fn read_pq(f: &str) {
 
-    let data = bucket::sample(f);
+    let data = bucket::sample(f, 1);
     // let files = list_files(d);
     // let _ = files.par_iter().for_each(|f| {
     //     let v = hyper::X264Video::load(f.to_path_buf());
