@@ -29,8 +29,8 @@ impl X264Video {
         }
     }
 
-    pub async fn processing(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let mut tasks = Vec::new();
+    pub async fn processing(&self) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
+        let mut images = Vec::new();
 
         let _ = self.mkdir().await?;
 
@@ -48,7 +48,6 @@ impl X264Video {
         let mut decoder = ctx.decoder().video()?;
 
         let mut count = 0;
-        let mut valid = 0;
 
         let w = decoder.width();
         let h = decoder.height();
@@ -68,24 +67,19 @@ impl X264Video {
                 let mut decoded_frame = frame::video::Video::empty();
                 while decoder.receive_frame(&mut decoded_frame).is_ok() {
                     if count % 5 ==0 {
-                        let f = format!("{}/{:04}.jpg", self.local, valid);
+                        // let f = format!("{}/{:04}.jpg", self.local, valid);
                         let mut frame = frame::video::Video::empty();
                         scaler.run(&decoded_frame, &mut frame)?;
                         let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap();
                         let data = img.to_vec();
-                        tasks.push(tokio::spawn(async move {
-                            let mut file = fs::File::create(f).await?;
-                            file.write_all(&data).await?;
-                            Ok::<(), std::io::Error>(())
-                        }));
-                        valid+=1;
+                        images.push(data);
                     }
                     count+=1;
                 }
             }
         }
         decoder.send_eof()?;
-        Ok(())
+        Ok(images)
     }
 
     pub async fn mkdir(&self) -> Result<(), std::io::Error> {
