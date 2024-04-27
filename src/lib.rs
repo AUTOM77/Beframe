@@ -3,6 +3,7 @@ use rayon::prelude::*;
 use std::time::Instant;
 use std::path::PathBuf;
 mod hyper;
+mod bucket;
 
 fn list_files(folder_path: &str) -> Vec<PathBuf> {
     let mut mp4_files = Vec::new();
@@ -20,10 +21,10 @@ fn list_files(folder_path: &str) -> Vec<PathBuf> {
 pub fn single_cap(f: &str) {
     let start_time = Instant::now();
 
-    let path = PathBuf::from(f);
-    let v = hyper::X264Video::load(path);
-    let _ = v.processing();
-
+    // let path = PathBuf::from(f);
+    // let v = hyper::X264Video::load(path);
+    // let _ = v.processing();
+    read_pq(f);
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
 }
@@ -39,4 +40,14 @@ pub fn rayon_cap(d: &str) {
 
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
+}
+
+pub fn read_pq(f: &str) {
+
+    let data = bucket::sample(f);
+    // let files = list_files(d);
+    // let _ = files.par_iter().for_each(|f| {
+    //     let v = hyper::X264Video::load(f.to_path_buf());
+    //     let _ = v.processing();
+    // });
 }

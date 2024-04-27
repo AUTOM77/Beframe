@@ -34,9 +34,9 @@ impl X264Video {
         let mut ictx = format::input(&self.path)?;
 
         let input = ictx
-                .streams()
-                .best(media::Type::Video)
-                .ok_or(ffmpeg_next::Error::StreamNotFound)?;
+            .streams()
+            .best(media::Type::Video)
+            .ok_or(ffmpeg_next::Error::StreamNotFound)?;
         let idx = input.index();
         let ctx = codec::context::Context::from_parameters(input.parameters())?;
 

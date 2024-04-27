@@ -9,6 +9,8 @@ ffmpeg-next = { version = "7.0.0", features=["build"] }
 rayon = "1.10"
 image = "0.25.1"
 md-5 = "0.10.6"
+parquet = "51.0.0"
+
 [[bin]]
 name = "bf"
 path = "src/cli.rs"
