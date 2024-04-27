@@ -35,7 +35,7 @@ async fn cmp_async_1(d: &str) -> Result<(), Box<dyn std::error::Error>> {
     for f in files {
         pool.push(task::spawn(async {
             let v = tk::X264Video::load(f);
-            let _  = v.mkdir().await;
+            let _  = v.processing().await;
         }));
     }
 
