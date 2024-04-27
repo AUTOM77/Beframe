@@ -48,10 +48,12 @@ async fn cmp_async_1(d: &str) -> Result<(), Box<dyn std::error::Error>> {
 
 
 
-pub fn bench(d: &str) {
+pub async fn bench(d: &str) -> Result<(), Box<dyn std::error::Error>> {
     let start_time = Instant::now();
-    let _ = cmp_async_1(d);
+    let _ = cmp_async_1(d).await?;
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?} normal", elapsed_time);
+
+    Ok(())
 }
 
