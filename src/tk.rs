@@ -66,12 +66,11 @@ impl X264Video {
                 let mut decoded_frame = frame::video::Video::empty();
                 while decoder.receive_frame(&mut decoded_frame).is_ok() {
                     if count % 5 ==0 {
-                        // let _ = self.add_frame(&decoded_frame, valid).await?;
                         let f = format!("{}/{:04}.jpg", self.local, valid);
                         let mut frame = frame::video::Video::empty();
                         scaler.run(&decoded_frame, &mut frame)?;
                         let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap();
-                        img.save(f)?; 
+                        let data = img.to_vec();
 
                         valid+=1;
                     }
