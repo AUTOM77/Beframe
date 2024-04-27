@@ -21,10 +21,9 @@ fn list_files(folder_path: &str) -> Vec<PathBuf> {
 pub fn single_cap(f: &str) {
     let start_time = Instant::now();
 
-    // let path = PathBuf::from(f);
-    // let v = hyper::X264Video::load(path);
-    // let _ = v.processing();
-    read_pq(f);
+    let path = PathBuf::from(f);
+    let v = hyper::X264Video::load(path);
+    let _ = v.processing();
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
 }
@@ -42,12 +41,10 @@ pub fn rayon_cap(d: &str) {
     println!("Processing time: {:?}", elapsed_time);
 }
 
-pub fn read_pq(f: &str) {
+pub fn pq_cap(f: &str) {
 
+    let start_time = Instant::now();
     let data = bucket::sample(f, 1);
-    // let files = list_files(d);
-    // let _ = files.par_iter().for_each(|f| {
-    //     let v = hyper::X264Video::load(f.to_path_buf());
-    //     let _ = v.processing();
-    // });
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?}", elapsed_time);
 }
