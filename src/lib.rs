@@ -1,4 +1,4 @@
-use rayon::prelude::*;
+use rayon::{prelude::*, vec};
 
 use std::time::Instant;
 use std::path::Path;
@@ -17,19 +17,20 @@ pub fn single_cap(f: &str) {
 pub fn rayon_cap(d: &str) {
     let start_time = Instant::now();
 
-    std::fs::read_dir(d)
+    let valid_path = std::fs::read_dir(d)
         .unwrap()
         .par_bridge()
         .filter_map(|entry| {
             let entry = entry.unwrap();
             let path = entry.path();
             if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
-                Some(hyper::X264Video::load(path))
+                Some(path)
+                // Some(hyper::X264Video::load(path))
             } else {
                 None
             }
-        })
-        .for_each(|v| {  });
+        });
+        // .for_each(|v| {  });
         // .for_each(|v| { let _ = v.processing(); });
 
     let elapsed_time = start_time.elapsed();
@@ -40,13 +41,16 @@ pub fn rayon_cap(d: &str) {
 pub fn batch_cap(d: &str) {
     let start_time = Instant::now();
 
+    let mut valid_path = vec![];
+
     let path = Path::new(d);
     for entry in std::fs::read_dir(path).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
         
         if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
-            let v = hyper::X264Video::load(path);
+            // let v = hyper::X264Video::load(path);
+            valid_path.push(path);
             // let _ = v.processing();
         }
     }
