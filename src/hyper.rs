@@ -81,7 +81,7 @@ impl X264Video {
         scaler.run(&_frame, &mut frame)?;
 
         let img = RgbImage::from_raw(w, h, frame.data(0).to_vec()).unwrap();
-        // img.save(f)?; 
+        img.save(f)?; 
         Ok(())
     }
 
