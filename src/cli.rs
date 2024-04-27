@@ -23,7 +23,7 @@ fn main() {
     if let Some(file_path) = opt.file.as_deref() {
         let _ = core::single_cap(file_path);
     } else if let Some(dir_path) = opt.dir.as_deref() {
-        // let _ = core::batch_cap(dir_path);
+        let _ = core::batch_cap(dir_path);
         let _ = core::rayon_cap(dir_path);
     }
 }
