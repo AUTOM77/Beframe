@@ -2,7 +2,10 @@
 
 Turn video into frames async
 
-
+```sh
+ffmpeg -i 1.mp4  -ss 00:00:01 -frames:v -o 1.png
+ffmpeg -i 1.mp4  -ss 00:00:01 -frames:v -o 1.jpg
+```
 ### Compile from source
 
 ```bash
