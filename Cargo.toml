@@ -7,9 +7,11 @@ edition = "2021"
 clap = { version= "4.5.4", features=["derive"] }
 md-5 = "0.10.6"
 rayon = "1.10"
-# ffmpeg-next = { version = "7.0.0", features=["build"] }
-# polars = { version = "0.39.2", features = ["lazy", "parquet"] }
+av-codec = "0.3.0"
+av-data = "0.4.2"
+av-format = "0.7.0"
 # image = "0.25.1"
+# polars = { version = "0.39.2", features = ["lazy", "parquet"] }
 
 [[bin]]
 name = "bf"
