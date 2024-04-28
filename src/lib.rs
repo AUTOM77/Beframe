@@ -1,50 +1,64 @@
-use rayon::prelude::*;
-
 use std::time::Instant;
 use std::path::PathBuf;
+
+use rayon::prelude::*;
+
 mod hyper;
-mod bucket;
 
-fn list_files(folder_path: &str) -> Vec<PathBuf> {
-    let mut mp4_files = Vec::new();
-    for entry in std::fs::read_dir(folder_path).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
+use hyper::X264Video;
 
-        if path.is_file() && path.extension().unwrap_or_default() == "mp4" {
-            mp4_files.push(path);
-        }
+fn single_cap(f: PathBuf){
+    let start_time = Instant::now();
+    let elapsed_time = start_time.elapsed();
+
+    println!("Processing file: {:?}", f);
+    println!("Processing time: {:?}", elapsed_time);
+}
+
+fn process_videos(d: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let hashes:Vec<String> = std::fs::read_dir(d)?
+        .filter_map(Result::ok)
+        .par_bridge()
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "mp4")
+        .map(|path| std::fs::read(&path))
+        .filter_map(Result::ok)
+        .map(|buffer| X264Video::load(&buffer))
+        .map(|video|video.hash())
+        .collect();
+    Ok(hashes)
+}
+
+fn process_videos_from(d: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let hashes:Vec<String> = std::fs::read_dir(d)?
+        .filter_map(Result::ok)
+        .par_bridge()
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "mp4")
+        .map(|path| X264Video::from(&path))
+        .map(|video|video.hash())
+        .collect();
+    Ok(hashes)
+}
+
+fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
+    let start_time = Instant::now();
+    println!("Processing dir: {:?}", d);
+    
+    // let _hash = process_videos(d)?;
+    let _hash = process_videos_from(d)?;
+
+    let elapsed_time = start_time.elapsed();
+    println!("Processing time: {:?}", elapsed_time);
+    Ok(())
+}
+
+pub fn processing(path: &str){
+    let _pth = PathBuf::from(path);
+
+    if _pth.is_file() {
+        let _ = single_cap(_pth);
+    } else {
+        let _ = hyper_cap(_pth);
     }
-    mp4_files
-}
-
-pub fn single_cap(f: &str) {
-    let start_time = Instant::now();
-
-    let path = PathBuf::from(f);
-    let v = hyper::X264Video::load(path);
-    let _ = v.processing();
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?}", elapsed_time);
-}
-
-pub fn rayon_cap(d: &str) {
-    let start_time = Instant::now();
-
-    let files = list_files(d);
-    let _ = files.par_iter().for_each(|f| {
-        let v = hyper::X264Video::load(f.to_path_buf());
-        let _ = v.processing();
-    });
-
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?}", elapsed_time);
-}
-
-pub fn pq_cap(f: &str) {
-
-    let start_time = Instant::now();
-    let data = bucket::sample(f, 1);
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?}", elapsed_time);
 }

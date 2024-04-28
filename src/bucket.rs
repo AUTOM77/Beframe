@@ -3,7 +3,6 @@ use polars::prelude::*;
 use rayon::prelude::*;
 
 pub fn sample(pq_path: &str, batch_size: usize) -> Result<(), PolarsError> {
-
     let df: DataFrame = LazyFrame::scan_parquet(pq_path, Default::default())?
         .select([col("video")])
         .collect()?;

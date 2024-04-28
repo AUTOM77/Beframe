@@ -1,15 +1,15 @@
 [package]
 name = "beframe"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 [dependencies]
 clap = { version= "4.5.4", features=["derive"] }
-ffmpeg-next = { version = "7.0.0", features=["build"] }
-polars = { version = "0.39.2", features = ["lazy", "parquet"] }
-rayon = "1.10"
-image = "0.25.1"
 md-5 = "0.10.6"
+rayon = "1.10"
+# ffmpeg-next = { version = "7.0.0", features=["build"] }
+# polars = { version = "0.39.2", features = ["lazy", "parquet"] }
+# image = "0.25.1"
 
 [[bin]]
 name = "bf"
