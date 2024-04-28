@@ -4,8 +4,10 @@ use std::path::PathBuf;
 use rayon::prelude::*;
 
 mod video;
+mod clip;
 use video::X264Video;
-use video::{Beframe, Frame};
+
+use clip::{Beframe, Frame};
 
 fn single_cap(f: PathBuf){
     let start_time = Instant::now();
