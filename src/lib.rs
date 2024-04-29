@@ -11,10 +11,11 @@ mod pq;
 
 
 fn single_cap(f: PathBuf){
+    let root = PathBuf::from("/dev/shm");
+
     let start_time = Instant::now();
-    let _ = pq::sample(&f);
+    let x = pq::Bucket::from(f, root);
     let elapsed_time = start_time.elapsed();
-    println!("Processing file: {:?}", f);
     println!("Processing time: {:?}", elapsed_time);
 }
 

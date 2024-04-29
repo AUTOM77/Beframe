@@ -11,13 +11,13 @@ pub struct X264Video {
 }
 
 impl X264Video {
-    pub fn load(buff: &Vec<u8>) -> Self {
+    pub fn load(buff: Vec<u8>, root: &std::path::PathBuf) -> Self {
         let mut hasher = Md5::new();
-        hasher.update(buff);
+        hasher.update(&buff);
         let digest = hasher.finalize();
 
         let path = root.join(format!("{:x}.mp4", digest));
-        let local = root.join(format!("{}/{:x}", _CACHE, digest));
+        let local = root.join(format!("_CACHE/{:x}", digest));
 
         let _ = std::fs::write(&path, buff).unwrap();
 
@@ -25,11 +25,6 @@ impl X264Video {
             path,
             local
         }
-    }
-
-    pub fn from(path: &std::path::PathBuf) -> Self {
-        let buff = std::fs::read(path).unwrap();
-        Self::load(&buff)
     }
 
     pub fn clip(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -80,7 +75,6 @@ impl X264Video {
         decoder.send_eof()?;
         Ok(())
     }
-
     pub fn mkdir(&self) -> Result<(), std::io::Error> {
         std::fs::create_dir_all(&self.local)?;
         Ok(())

@@ -55,15 +55,16 @@ impl Bucket {
     }
 }
 
-pub fn process_buckets_from(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let root= PathBuf::from("/dev/shm");
+pub fn process_buckets_from(d: PathBuf) -> Result<Vec<Vec<X264Video>>, Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/dev/shm");
 
-    let _ = std::fs::read_dir(d)?
+    let videos: Vec<Vec<X264Video>> = std::fs::read_dir(d)?
         .filter_map(Result::ok)
         .par_bridge()
         .map(|entry| entry.path())
         .filter(|path| path.extension().unwrap_or_default() == "parquet")
         .map(|pq| Bucket::from(pq, root.clone()))
-        .for_each(|x| x.sample().expect("mkdir failed"));
-    Ok(())
+        .map(|x| x.sample().expect("mkdir failed"))
+        .collect();
+    Ok(videos)
 }
