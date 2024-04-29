@@ -13,7 +13,7 @@ pub struct Bucket {
 }
 
 impl Bucket {
-    pub fn from(path: std::path::PathBuf, root: std::path::PathBuf) -> Self {
+    pub fn from(path: PathBuf, root: PathBuf) -> Self {
         let buff = std::fs::read(&path).unwrap();
         let mut hasher = Md5::new();
         hasher.update(buff);
@@ -55,12 +55,11 @@ impl Bucket {
     }
 }
 
-pub fn process_buckets_from(d: PathBuf) -> Result<Vec<Vec<X264Video>>, Box<dyn std::error::Error>> {
-    let root = PathBuf::from("/dev/shm");
+pub fn process_buckets_from(d: PathBuf, root: PathBuf) -> Result<Vec<Vec<X264Video>>, Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/data/videos");
 
     let videos: Vec<Vec<X264Video>> = std::fs::read_dir(d)?
         .filter_map(Result::ok)
-        .par_bridge()
         .map(|entry| entry.path())
         .filter(|path| path.extension().unwrap_or_default() == "parquet")
         .map(|pq| Bucket::from(pq, root.clone()))
