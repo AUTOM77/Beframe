@@ -5,14 +5,15 @@ use rayon::prelude::*;
 
 mod video;
 mod clip;
+mod pq;
 use video::X264Video;
 
 use clip::{Beframe, Frame};
 
 fn single_cap(f: PathBuf){
     let start_time = Instant::now();
+    // let _ = pq::sample(&f);
     let elapsed_time = start_time.elapsed();
-
     println!("Processing file: {:?}", f);
     println!("Processing time: {:?}", elapsed_time);
 }
@@ -51,11 +52,13 @@ fn process_frames(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         .filter(|path| path.extension().unwrap_or_default() == "mp4")
         .map(|path| Beframe::from(path))
         .collect();
+    frames.par_iter()
+        .for_each(|frame| frame.clip().expect("failed"));
     Ok(())
 }
 
 fn process_frames_dry(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let hashes:Vec<String>= std::fs::read_dir(d)?
+    let hashes:Vec<PathBuf>= std::fs::read_dir(d)?
         .filter_map(Result::ok)
         .par_bridge()
         .map(|entry| entry.path())
@@ -68,14 +71,14 @@ fn process_frames_dry(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn process_frames_x(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let framesX: Vec<Vec<Frame>>= std::fs::read_dir(d)?
+    let framesX= std::fs::read_dir(d)?
         .filter_map(Result::ok)
         .par_bridge()
         .map(|entry| entry.path())
         .filter(|path| path.extension().unwrap_or_default() == "mp4")
         .map(|path| Beframe::from(path))
-        .map(|video| video.clip().expect("failed"))
-        .collect();
+        .for_each(|frame| frame.clip().expect("failed"));
+
     Ok(())
 }
 
@@ -86,7 +89,8 @@ fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
     
     // let _hash = process_videos(d)?;
     // let _hash = process_videos_from(d)?;
-    let _hash = process_frames_x(d)?;
+    // let _hash = process_frames_x(d)?;
+    let _ = pq::process_buckets_from(d);
 
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
