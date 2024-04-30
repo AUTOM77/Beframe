@@ -1,6 +1,18 @@
 use std::path::PathBuf;
 use rayon::prelude::*;
 
+pub fn process_buckets_from(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let root= PathBuf::from("/dev/shm");
+
+    let _ = std::fs::read_dir(d)?
+        .filter_map(Result::ok)
+        .par_bridge()
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "parquet")
+        .map(|pq| Bucket::from(pq, root.clone()))
+        .for_each(|x| x.mkdir().expect("mkdir failed"));
+    Ok(())
+}
 
 fn process_videos_from(d: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let hashes:Vec<String> = std::fs::read_dir(d)?

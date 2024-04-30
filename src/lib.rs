@@ -1,15 +1,12 @@
 use std::time::Instant;
 use std::path::PathBuf;
 
-use rayon::prelude::*;
-mod video;
-mod pq;
+pub mod bucket;
 
 fn single_cap(f: PathBuf){
-    let root = PathBuf::from("/dd");
-
+    let root = PathBuf::from("/data");
     let start_time = Instant::now();
-    let x = pq::Bucket::from(f, root);
+
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);
 }
@@ -17,9 +14,7 @@ fn single_cap(f: PathBuf){
 fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
     let start_time = Instant::now();
     println!("Processing dir: {:?}", d);
-    let root = PathBuf::from("/dd");
-
-    let _ = pq::process_buckets_from(d, root);
+    let root = PathBuf::from("/data");
 
     let elapsed_time = start_time.elapsed();
     println!("Processing time: {:?}", elapsed_time);

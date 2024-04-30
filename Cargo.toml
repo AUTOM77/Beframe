@@ -11,7 +11,6 @@ image = "0.25.1"
 md-5 = "0.10.6"
 rayon = "1.10"
 
-
 [[bin]]
 name = "bf"
 path = "src/cli.rs"

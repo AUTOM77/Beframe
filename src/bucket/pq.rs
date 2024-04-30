@@ -1,43 +1,82 @@
 use polars::prelude::*;
-use md5::{Md5, Digest};
 use std::path::PathBuf;
-// bucket_hash/[ cache/{0..n}.mp4, frame/{0..n}.jpg ]
+use std::io::{Read, Write};
+use md5::{Md5, Digest};
 
 pub struct Bucket {
-    root: PathBuf,
     path: PathBuf,
     local: PathBuf
 }
 
 impl Bucket {
-    pub fn from(path: std::path::PathBuf, root: std::path::PathBuf) -> Self {
-        let buff = std::fs::read(&path).unwrap();
+    pub fn from(path: PathBuf, root: PathBuf) -> Self {
+        let _pth = path.clone();
+        let fname = _pth.file_stem().and_then(|stem| stem.to_str()).unwrap();
+        Self {
+            path,
+            local: root.join(fname),
+        }
+    }
+
+    pub fn load(&self) -> Result<Vec<u8>, std::io::Error> {
+        let mut buff = Vec::new();
+
+        let f = std::fs::File::open(&self.path)?;
+        let mut r = std::io::BufReader::new(f);
+        
+        r.read_to_end(&mut buff)?;
+        Ok(buff)
+    }
+
+    pub fn av_split(&self, buffer: Vec<u8>, idx: u32 ) -> Result<(), std::io::Error> {
+        let path = self.local.join(format!("{:04}.mp4", idx));
+
+        let f = std::fs::File::create(path)?;
+        let mut w = std::io::BufWriter::new(f);
+        
+        let _ = w.write_all(&buffer)?;
+
+        Ok(())
+    }
+
+    pub fn hash(&self) -> String {
+        let buff = self.load().unwrap();
         let mut hasher = Md5::new();
         hasher.update(buff);
         let digest = hasher.finalize();
-        let local = root.join(format!("{:x}", digest));
-
-        Self {
-            root,
-            path,
-            local
-        }
+        format!("{:x}",digest)
     }
 
     pub fn sample(&self) -> Result<Vec<Vec<u8>>, PolarsError> {
         let _ = self.mkdir()?;
-        let df: DataFrame = LazyFrame::scan_parquet(&self.path, Default::default())?
+        let x: Vec<Vec<u8>> = LazyFrame::scan_parquet(&self.path, Default::default())?
             .select([col("video")])
-            .collect()?;
-
-        let raw = df.column("video")?.binary()?;
-
-        let video_series: Vec<Vec<u8>> = raw
+            .collect()?
+            .column("video")?
+            .binary()?
             .iter()
             .filter_map(|video| video)
-            .map(|x| X264Video::load(x.to_vec(), &self.local))
+            .map(|x| x.to_vec())
             .collect();
-        Ok(video_series)
+        Ok(x)
+    }
+
+    pub fn sample_dry(&self) -> Result<(), PolarsError> {
+        let _ = self.mkdir()?;
+
+        let _ = LazyFrame::scan_parquet(&self.path, Default::default())?
+            .select([col("video")])
+            .collect()?
+            .column("video")?
+            .binary()?
+            .iter()
+            .filter_map(|video| video)
+            .map(|x| x.to_vec())
+            .enumerate()
+            .try_for_each(|(i, video)| {
+                self.av_split(video, i as u32)
+            });
+        Ok(())
     }
 
     pub fn mkdir(&self) -> Result<(), std::io::Error> {
@@ -50,17 +89,3 @@ impl Bucket {
         Ok(())
     }
 }
-
-pub fn process_buckets_from(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let root= PathBuf::from("/dev/shm");
-
-    let _ = std::fs::read_dir(d)?
-        .filter_map(Result::ok)
-        .par_bridge()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().unwrap_or_default() == "parquet")
-        .map(|pq| Bucket::from(pq, root.clone()))
-        .for_each(|x| x.mkdir().expect("mkdir failed"));
-    Ok(())
-}
-
