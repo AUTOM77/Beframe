@@ -25,6 +25,7 @@ impl Bucket {
         let mut r = std::io::BufReader::new(f);
         
         r.read_to_end(&mut buff)?;
+
         Ok(buff)
     }
 
@@ -35,7 +36,7 @@ impl Bucket {
         let mut w = std::io::BufWriter::new(f);
         
         let _ = w.write_all(buffer)?;
-
+        let _ = w.flush()?;
         Ok(())
     }
 
