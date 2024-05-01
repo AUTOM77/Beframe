@@ -9,12 +9,13 @@ pub struct Bucket {
 }
 
 impl Bucket {
-    pub fn from(path: PathBuf, root: PathBuf) -> Self {
+    pub fn from(path: PathBuf, root: &PathBuf) -> Self {
         let _pth = path.clone();
-        let fname = _pth.file_stem().and_then(|stem| stem.to_str()).unwrap();
+        let _file = _pth.file_stem().and_then(|stem| stem.to_str()).unwrap();
+        let local = root.join(_file);
         Self {
             path,
-            local: root.join(fname),
+            local
         }
     }
 
@@ -49,7 +50,6 @@ impl Bucket {
     }
 
     pub fn sample(&self) -> Result<Vec<Vec<u8>>, PolarsError> {
-        let _ = self.mkdir()?;
         let x: Vec<Vec<u8>> = LazyFrame::scan_parquet(&self.path, Default::default())?
             .select([col("video")])
             .collect()?
@@ -62,7 +62,8 @@ impl Bucket {
         Ok(x)
     }
 
-    pub fn sample_dry(&self) -> Result<(), PolarsError> {
+
+    pub fn sample_dry(&self) -> Result<PathBuf, PolarsError> {
         let _ = self.mkdir()?;
 
         let _ = self.sample()?
@@ -71,7 +72,7 @@ impl Bucket {
             .try_for_each(|(i, video)| {
                 self.av_split(video, i as u32)
             });
-        Ok(())
+        Ok(self.local.clone())
     }
 
     pub fn mkdir(&self) -> Result<(), std::io::Error> {

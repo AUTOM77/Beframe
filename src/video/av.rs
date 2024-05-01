@@ -1,9 +1,9 @@
-use md5::{Md5, Digest};
-use image::RgbImage;
 use ffmpeg_next::{codec, format, frame, media, software};
 use std::path::PathBuf;
+use std::io::Write;
+use md5::{Md5, Digest};
 
-static _CACHE: &str = "fc";
+use image::RgbImage;
 
 pub struct X264Video {
     path: PathBuf,
@@ -11,20 +11,31 @@ pub struct X264Video {
 }
 
 impl X264Video {
-    pub fn load(buff: Vec<u8>, root: &std::path::PathBuf) -> Self {
-        let mut hasher = Md5::new();
-        hasher.update(&buff);
-        let digest = hasher.finalize();
-
-        let path = root.join(format!("{:x}.mp4", digest));
-        let local = root.join(format!("_CACHE/{:x}", digest));
-
-        let _ = std::fs::write(&path, buff).unwrap();
-
+    pub fn from(path: PathBuf, root: &PathBuf) -> Self {
+        let _pth = path.clone();
+        let fname = _pth.file_stem().and_then(|stem| stem.to_str()).unwrap();
         Self {
             path,
-            local
+            local: root.join(fname),
         }
+    }
+
+    pub fn load(buffer: Vec<u8>, root: &PathBuf) ->  Result<X264Video, Box<dyn std::error::Error>> {
+        let _acc:PathBuf = PathBuf::from("/dev/shm");
+
+        let mut hasher = Md5::new();
+        hasher.update(&buffer);
+        let digest = hasher.finalize();
+
+        let path = _acc.join(format!("{:x}.mp4", digest));
+        let local = root.join(format!("{:x}", digest));
+
+        let f = std::fs::File::create(&path)?;
+        let mut w = std::io::BufWriter::new(f);
+        let _ = w.write_all(&buffer)?;
+        let _ = w.flush()?;
+
+        Ok( Self{path,local} )
     }
 
     pub fn clip(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -75,13 +86,14 @@ impl X264Video {
         decoder.send_eof()?;
         Ok(())
     }
+
     pub fn mkdir(&self) -> Result<(), std::io::Error> {
         std::fs::create_dir_all(&self.local)?;
         Ok(())
     }
 
     pub fn drop(&self) -> Result<(), std::io::Error> {
-        std::fs::remove_dir_all(&self.local)?;
+        std::fs::remove_file(&self.path)?;
         Ok(())
     }
 }

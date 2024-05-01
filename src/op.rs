@@ -1,79 +1,108 @@
+use std::time::Instant;
 use std::path::PathBuf;
 use rayon::prelude::*;
 
-pub fn process_buckets_from(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let root= PathBuf::from("/dev/shm");
+use crate::bucket::pq::Bucket;
+use crate::video::av::X264Video;
+
+pub fn process_single_bucket(f: PathBuf) -> Result<Bucket, Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/dev/shm/video");
+    let x = Bucket::from(f, &root);
+    Ok(x)
+}
+
+pub fn process_video(cache: Vec<Vec<u8>>) -> Vec<X264Video> {
+    let root = PathBuf::from("/dev/shm/video");
+
+    cache
+        .par_iter()
+        .map(|c| {
+            let v = X264Video::load(c.to_vec(), &root).expect("Error video");
+            v.clip().expect("Error clip");
+            v.drop().expect("Error drop");
+            v
+        })
+        .collect()
+}
+
+pub fn process_video_chunks(chunks: &[Bucket]) -> Vec<Vec<X264Video>> {
+    chunks
+        .par_iter()
+        .map(|bucket| bucket.sample().expect("Error bucket"))
+        .map(|_chunk| process_video(_chunk))
+        .collect()
+}
+
+pub fn process_buckets_video(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/dev/shm/video");
+
+    let buckets: Vec<Bucket> = std::fs::read_dir(d)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "parquet")
+        .map(|pq| Bucket::from(pq, &root) )
+        .collect();
+    
+    let videos: Vec<Vec<Vec<X264Video>>> = buckets
+            .chunks(5)
+            .map(|chunk| process_video_chunks(chunk))
+            .collect();
+    Ok(())
+}
+
+pub fn process_buckets_bytes(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/dev/shm/video");
+
+    let buckets: Vec<Bucket> = std::fs::read_dir(d)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "parquet")
+        .map(|pq| Bucket::from(pq, &root) )
+        .collect();
+
+    let cache: Vec<Vec<Vec<Vec<u8>>>> = buckets
+            .chunks(5)
+            .map(|chunk| {
+                let _cache: Vec<Vec<Vec<u8>>> = chunk.par_iter()
+                .map(|bucket| bucket.sample().expect("shit"))
+                .collect();
+                _cache
+            })
+            .collect();
+    Ok(())
+}
+
+pub fn process_buckets_chunk(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/dev/shm/video");
+
+    let buckets: Vec<Bucket> = std::fs::read_dir(d)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "parquet")
+        .map(|pq| Bucket::from(pq, &root) )
+        .collect();
+
+    let cache: Vec<Vec<PathBuf>> = buckets
+            .chunks(5)
+            .map(|chunk| {
+                let _cache: Vec<PathBuf> = chunk.par_iter()
+                .map(|bucket| bucket.sample_dry().expect("Error Sample"))
+                .collect();
+                _cache
+            })
+            .collect();
+    Ok(())
+}
+
+pub fn process_buckets_mkdir(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let root = PathBuf::from("/dev/shm/video");
 
     let _ = std::fs::read_dir(d)?
         .filter_map(Result::ok)
         .par_bridge()
         .map(|entry| entry.path())
         .filter(|path| path.extension().unwrap_or_default() == "parquet")
-        .map(|pq| Bucket::from(pq, root.clone()))
+        .map(|pq| Bucket::from(pq, &root))
         .for_each(|x| x.mkdir().expect("mkdir failed"));
-    Ok(())
-}
-
-fn process_videos_from(d: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let hashes:Vec<String> = std::fs::read_dir(d)?
-        .filter_map(Result::ok)
-        .par_bridge()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().unwrap_or_default() == "mp4")
-        .map(|path| X264Video::from(&path))
-        .map(|video|video.hash())
-        .collect();
-    Ok(hashes)
-}
-
-fn process_videos(d: PathBuf) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let hashes:Vec<String> = std::fs::read_dir(d)?
-        .filter_map(Result::ok)
-        .par_bridge()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().unwrap_or_default() == "mp4")
-        .map(|path| std::fs::read(&path))
-        .filter_map(Result::ok)
-        .map(|buffer| X264Video::load(&buffer))
-        .map(|video| video.hash())
-        .collect();
-    Ok(hashes)
-}
-
-fn process_frames(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let frames:Vec<Beframe> = std::fs::read_dir(d)?
-        .filter_map(Result::ok)
-        .par_bridge()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().unwrap_or_default() == "mp4")
-        .map(|path| Beframe::from(path))
-        .collect();
-    frames.par_iter()
-        .for_each(|frame| frame.clip().expect("failed"));
-    Ok(())
-}
-
-fn process_frames_dry(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let hashes:Vec<PathBuf>= std::fs::read_dir(d)?
-        .filter_map(Result::ok)
-        .par_bridge()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().unwrap_or_default() == "mp4")
-        .map(|path| Beframe::from(path))
-        .map(|video| video.hash())
-        .collect();
-    println!("{:?}", hashes);
-    Ok(())
-}
-
-fn process_frames_x(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let framesX= std::fs::read_dir(d)?
-        .filter_map(Result::ok)
-        .par_bridge()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().unwrap_or_default() == "mp4")
-        .map(|path| Beframe::from(path))
-        .for_each(|frame| frame.clip().expect("failed"));
-
     Ok(())
 }
