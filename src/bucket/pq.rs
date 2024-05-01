@@ -28,13 +28,13 @@ impl Bucket {
         Ok(buff)
     }
 
-    pub fn av_split(&self, buffer: Vec<u8>, idx: u32 ) -> Result<(), std::io::Error> {
+    pub fn av_split(&self, buffer: &Vec<u8>, idx: u32 ) -> Result<(), std::io::Error> {
         let path = self.local.join(format!("{:04}.mp4", idx));
 
         let f = std::fs::File::create(path)?;
         let mut w = std::io::BufWriter::new(f);
         
-        let _ = w.write_all(&buffer)?;
+        let _ = w.write_all(buffer)?;
 
         Ok(())
     }
@@ -64,14 +64,8 @@ impl Bucket {
     pub fn sample_dry(&self) -> Result<(), PolarsError> {
         let _ = self.mkdir()?;
 
-        let _ = LazyFrame::scan_parquet(&self.path, Default::default())?
-            .select([col("video")])
-            .collect()?
-            .column("video")?
-            .binary()?
+        let _ = self.sample()?
             .iter()
-            .filter_map(|video| video)
-            .map(|x| x.to_vec())
             .enumerate()
             .try_for_each(|(i, video)| {
                 self.av_split(video, i as u32)
