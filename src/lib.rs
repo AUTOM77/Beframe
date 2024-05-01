@@ -20,7 +20,7 @@ fn single_cap(f: PathBuf){
 fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
     let start_time = Instant::now();
     println!("Processing dir: {:?}", d);
-    let root = PathBuf::from("/data");
+    let root = PathBuf::from("/data/video");
 
     let buckets: Vec<Bucket> = std::fs::read_dir(d)?
         .filter_map(Result::ok)
@@ -30,9 +30,9 @@ fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
         .collect();
 
     let _ = buckets
-        .par_chunks(50)
+        .chunks(20)
         .for_each(
-            |chunk|chunk.iter()
+            |chunk|chunk.par_iter()
             .for_each(|x|x.sample_dry().expect("Error processing bucket"))
         );
 
