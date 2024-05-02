@@ -34,7 +34,7 @@ pub fn process_video_chunks(chunks: &[Bucket]) -> Vec<Vec<X264Video>> {
 }
 
 pub fn process_buckets_video(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let root = PathBuf::from("/dev/shm/frame");
+    let root = PathBuf::from("/data/frame");
 
 
     let buckets: Vec<Bucket> = std::fs::read_dir(d)?
