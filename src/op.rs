@@ -12,7 +12,7 @@ pub fn process_single_bucket(f: PathBuf) -> Result<Bucket, Box<dyn std::error::E
 }
 
 pub fn process_video(cache: Vec<Vec<u8>>) -> Vec<X264Video> {
-    let root = PathBuf::from("/dev/shm/video");
+    let root = PathBuf::from("/data/frame");
 
     cache
         .par_iter()
@@ -35,6 +35,7 @@ pub fn process_video_chunks(chunks: &[Bucket]) -> Vec<Vec<X264Video>> {
 
 pub fn process_buckets_video(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let root = PathBuf::from("/dev/shm/video");
+
 
     let buckets: Vec<Bucket> = std::fs::read_dir(d)?
         .filter_map(Result::ok)
@@ -106,3 +107,4 @@ pub fn process_buckets_mkdir(d: PathBuf) -> Result<(), Box<dyn std::error::Error
         .for_each(|x| x.mkdir().expect("mkdir failed"));
     Ok(())
 }
+

@@ -71,7 +71,7 @@ impl X264Video {
                 decoder.send_packet(&packet)?;
                 let mut decoded_frame = frame::video::Video::empty();
                 while decoder.receive_frame(&mut decoded_frame).is_ok() {
-                    if count % 5 == 0{
+                    if count % 9 == 0{
                         let mut rgb_frame = frame::video::Video::empty();
                         scaler.run(&decoded_frame, &mut rgb_frame)?;
                         let img = RgbImage::from_raw(w, h, rgb_frame.data(0).to_vec()).unwrap(); 
