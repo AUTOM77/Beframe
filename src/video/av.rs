@@ -21,13 +21,13 @@ impl X264Video {
     }
 
     pub fn load(buffer: Vec<u8>, root: &PathBuf) ->  Result<X264Video, Box<dyn std::error::Error>> {
-        let _acc:PathBuf = PathBuf::from("/dev/shm");
+        let _shm:PathBuf = PathBuf::from("/dev/shm");
 
         let mut hasher = Md5::new();
         hasher.update(&buffer);
         let digest = hasher.finalize();
 
-        let path = _acc.join(format!("{:x}.mp4", digest));
+        let path = _shm.join(format!("{:x}.mp4", digest));
         let local = root.join(format!("{:x}", digest));
 
         let f = std::fs::File::create(&path)?;

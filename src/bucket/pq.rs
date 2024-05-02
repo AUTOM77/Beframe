@@ -62,6 +62,11 @@ impl Bucket {
         Ok(x)
     }
 
+    pub fn sample_dir(&self) -> Result<(Vec<Vec<u8>>, PathBuf), PolarsError> {
+        let _vec = self.sample()?;
+        Ok((_vec, self.local.clone()))
+    }
+
 
     pub fn sample_dry(&self) -> Result<PathBuf, PolarsError> {
         let _ = self.mkdir()?;

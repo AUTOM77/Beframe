@@ -11,8 +11,8 @@ pub fn process_single_bucket(f: PathBuf) -> Result<Bucket, Box<dyn std::error::E
     Ok(x)
 }
 
-pub fn process_video(cache: Vec<Vec<u8>>) -> Vec<X264Video> {
-    let root = PathBuf::from("/data/frame");
+pub fn process_video(cache: Vec<Vec<u8>>, root:PathBuf) -> Vec<X264Video> {
+    // let root = PathBuf::from("/data/frame");
 
     cache
         .par_iter()
@@ -28,13 +28,13 @@ pub fn process_video(cache: Vec<Vec<u8>>) -> Vec<X264Video> {
 pub fn process_video_chunks(chunks: &[Bucket]) -> Vec<Vec<X264Video>> {
     chunks
         .par_iter()
-        .map(|bucket| bucket.sample().expect("Error bucket"))
-        .map(|_chunk| process_video(_chunk))
+        .map(|bucket| bucket.sample_dir().expect("Error bucket"))
+        .map(|(c, p) | process_video(c, p))
         .collect()
 }
 
 pub fn process_buckets_video(d: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let root = PathBuf::from("/dev/shm/video");
+    let root = PathBuf::from("/dev/shm/frame");
 
 
     let buckets: Vec<Bucket> = std::fs::read_dir(d)?
