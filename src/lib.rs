@@ -15,7 +15,6 @@ fn single_cap(f: PathBuf){
     println!("Processing time: {:?}", elapsed_time);
 }
 
-
 fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
     let start_time = Instant::now();
     println!("Processing dir: {:?}", d);
