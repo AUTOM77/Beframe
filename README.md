@@ -32,3 +32,4 @@ Loading video from parquet:
 
 Decoding frames from video:
 1. Rayon with chunk(5) frame `Processing time: 15620s` for 100 pq files
+1. Rayon with chunk(5) frame `Processing time: 14948s` for 100 pq files
