@@ -21,7 +21,7 @@ impl X264Video {
     }
 
     pub fn load(buffer: Vec<u8>, root: &PathBuf) ->  Result<X264Video, Box<dyn std::error::Error>> {
-        let _shm:PathBuf = PathBuf::from("/dev/shm");
+        let _shm:PathBuf = PathBuf::from("/data/video/cache");
 
         let mut hasher = Md5::new();
         hasher.update(&buffer);
