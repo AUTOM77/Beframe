@@ -1,37 +1,28 @@
-pub mod bucket;
-pub mod video;
+pub mod storage;
+use image::buffer;
+use rayon::prelude::*;
 
-pub mod op;
-
-use std::time::Instant;
-use std::path::PathBuf;
-
-fn single_cap(f: PathBuf){
-    let start_time = Instant::now();
-    println!("Processing file: {:?}", f);
-
-    let x = op::process_single_bucket(f);
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?}", elapsed_time);
-}
-
-fn hyper_cap(d: PathBuf) -> Result<(), Box<dyn std::error::Error>>  {
-    let start_time = Instant::now();
-    println!("Processing dir: {:?}", d);
-
-    let x = op::process_buckets_video(d);
-
-    let elapsed_time = start_time.elapsed();
-    println!("Processing time: {:?}", elapsed_time);
-    Ok(())
-}
-
-pub fn processing(path: &str){
-    let _pth = std::path::PathBuf::from(path);
-
-    if _pth.is_file() {
-        let _ = single_cap(_pth);
-    } else {
-        let _ = hyper_cap(_pth);
+pub fn runtime(mut pth: std::path::PathBuf) -> Result<(), Box<dyn std::error::Error>>{
+    if pth.is_file() {
+        let abs = std::fs::canonicalize(pth)?;
+        pth = std::path::PathBuf::from(abs).parent().unwrap().to_path_buf();
     }
+
+    let lfs: Vec<storage::Parquet> = std::fs::read_dir(pth)
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().unwrap_or_default() == "parquet")
+        .map(|f| storage::Parquet::new(f.into()))
+        .collect();
+
+    lfs.par_iter()
+        .for_each(|x| {x.sample();} );
+
+    let video_root: Vec<_> = lfs.par_iter()
+        .map(|x| x.sample())
+        .collect();
+
+    println!("{:?}", video_root);
+    Ok(())
 }
