@@ -2,7 +2,7 @@ pub mod storage;
 use image::buffer;
 use rayon::prelude::*;
 
-pub fn runtime(lfs: &[storage::Parquet]){
+pub fn runtime(lfs: Vec<storage::Parquet>){
     let video_root: Vec<_> = lfs.par_iter()
         .map(|x| x.sample())
         .collect();
@@ -24,11 +24,13 @@ pub fn interface(mut pth: std::path::PathBuf, limit: Option<usize>) -> Result<()
         .map(|f| storage::Parquet::new(f.into()))
         .collect();
 
-    let limit_num = limit.unwrap_or(5);
 
-    for _lfs in lfs.chunks(limit_num) {
-        runtime(_lfs);
-    }
+    let _limit = limit.unwrap_or(5);
+    let _ runtime(lfs);
+
+    // for _lfs in lfs.chunks(limit_num) {
+    //     runtime(_lfs);
+    // }
 
     Ok(())
 }
