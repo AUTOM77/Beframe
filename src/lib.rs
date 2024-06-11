@@ -24,13 +24,7 @@ pub fn interface(mut pth: std::path::PathBuf, limit: Option<usize>) -> Result<()
         .map(|f| storage::Parquet::new(f.into()))
         .collect();
 
-
     let _limit = limit.unwrap_or(5);
-    let _ runtime(lfs);
-
-    // for _lfs in lfs.chunks(limit_num) {
-    //     runtime(_lfs);
-    // }
-
+    let _ = runtime(lfs);
     Ok(())
 }
